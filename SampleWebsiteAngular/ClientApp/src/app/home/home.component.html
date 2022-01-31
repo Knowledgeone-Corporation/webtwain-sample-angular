@@ -1,0 +1,31 @@
+<div class="container">
+  <div><h1>Scan Demo Page</h1></div>
+  <div class="alert alert-info alert-dismissible show" role="alert">
+    <strong>Note: </strong>The demonstration service has the following limitations;
+    - generated documents contain a watermark,
+    - multi-page documents are limited to 10 pages,
+    - OCR is limited to the first page of the document.
+    These limitations are not present in the licensed product.
+  </div>
+
+  <br />
+
+  <div class="form-group">
+    <label>Interface Option</label>
+    <div>
+      <select id="interface-option-dropdown" (change)="onInterfaceChange($event.target.value)" class="form-control">
+        <option>Please select...</option>
+        <option value="0">Hidden</option>
+        <option value="1">Visible</option>
+        <option value="2">Web</option>
+        <option value="3">Desktop</option>
+      </select>
+    </div>
+  </div>
+
+  <app-scanner-interface-hidden *ngIf="selectedOption == 0"></app-scanner-interface-hidden>
+  <app-scanner-interface-visible *ngIf="selectedOption == 1"></app-scanner-interface-visible>
+  <app-scanner-interface-web *ngIf="selectedOption == 2"></app-scanner-interface-web>
+  <app-scanner-interface-desktop *ngIf="selectedOption == 3"></app-scanner-interface-desktop>
+</div>
+
