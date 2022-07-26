@@ -27,7 +27,6 @@
               "src/lib/k1scanservice/css/k1ss.css"
             ],
             "scripts": [
-              "node_modules/jquery/dist/jquery.min.js"
             ]
           },
           "configurations": {
