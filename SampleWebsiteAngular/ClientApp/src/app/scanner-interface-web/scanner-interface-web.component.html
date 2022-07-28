@@ -1,17 +1,10 @@
-<div id="k1interface-visible" class="show">
-  <div><label>Name:</label></div>
-
-  <div><label>Scan Document:</label></div>
+<div id="k1interface-visible" [ngClass]="{'show': isDisplayUI, 'hide': !isDisplayUI}">
+  <div><label class="scanning-label">Scan Document:</label></div>
   <div class="input-group">
     <div class="input-group-btn">
       <button id="scanbtn" type="button" class="btn btn-primary" aria-label="Bold">
         <span>Scan</span>
       </button>
     </div>
-    <input class="form-control filename" aria-label="Text input with multiple buttons" />
   </div>
-  <br />
 </div>
-
-<app-scan-completed *ngIf="Render" message="{{ResponseString}}"></app-scan-completed>
-

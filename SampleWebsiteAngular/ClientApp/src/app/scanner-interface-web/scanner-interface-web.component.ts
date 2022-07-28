@@ -1,6 +1,7 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_framework.js';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import * as $ from 'jquery'
+import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_obfuscated.js';
+
 import '../../lib/bootstrap/dist/css/bootstrap.css';
 import '../../lib/k1scanservice/css/k1ss.min.css';
 
@@ -10,36 +11,41 @@ import '../../lib/k1scanservice/css/k1ss.min.css';
 })
 
 export class ScannerInterfaceWebComponent implements OnInit {
-  Render: Boolean = false;
-  Response: any = null;
-  ResponseString: String = "dsadsadsad";
-  constructor() {
-
-  }
+  @Output() completeAcquire = new EventEmitter<{acquireResponse: string, acquireError: string}>();
+  
+  isDisplayUI: Boolean = false;
+  
+  constructor() {}
 
   ngOnInit() {
     var self = this;
     let configuration = {
-      onComplete: function (data) {
-        self.Render = true;
-        self.Response = data;
-        self.ResponseString = JSON.stringify(data, null, 4);
-      },
-      viewButton: $(".k1ViewBtn"),
-      fileUploadURL: document.location.origin + '/Home/UploadFile',
-      clientID: "" + Date.now(),
-      setupFile: document.location.origin + '/Home/DownloadSetup',
-      interfacePath: "http://localhost:35497/assets/interface.html",
+      onComplete: function (response) {
+        self.completeAcquire.emit({
+          acquireResponse: JSON.stringify(response.uploadResponse, null, 4),
+          acquireError: '',
+        });
+      }, //function called when scan complete
+      viewButton: null, //This is optional. Specify a element that when clicked will view scanned document
+      fileUploadURL: document.location.origin + '/Home/UploadFile', //This is the service that the scanned document will be uploaded to when complete
+      clientID: "" + Date.now(), //This is a way to identify the user who is scanning.  It should be unique per user.  Session ID could be used if no user logged in
+      setupFile: document.location.origin + '/Home/DownloadSetup', //location of the installation file if service doesn't yet exist
+      interfacePath: document.location.origin + '/assets/interface.html', // This is optional if your application lives under a subdomain.
       scannerInterface: K1WebTwain.Options.ScannerInterface.Web,
-      scanButton: $("#scanbtn"),
+      scanButton: $("#scanbtn"), // the scan button
     };
 
-    K1WebTwain.Configure(configuration)
-      .then(x => {
-        console.log(x);
-      })
-      .catch(x => {
-        console.log(x);
+    K1WebTwain.Configure(configuration).then(() => {
+      this.isDisplayUI = false;
+
+      K1WebTwain.ResetService().then(function () {
+          setTimeout(() => {
+              self.isDisplayUI = true;
+          },4000)
       });
+    }).catch(err => {
+        console.log(err);
+        K1WebTwain.ResetService();
+    });
   }
 }

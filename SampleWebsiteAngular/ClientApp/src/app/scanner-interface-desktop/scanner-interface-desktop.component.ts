@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_framework.js';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import * as $ from 'jquery'
+import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_obfuscated.js';
+import { convertRawOptions, generateScanFileName, renderOptions } from '../../utils/scanningUtils';
+
 import '../../lib/bootstrap/dist/css/bootstrap.css';
 import '../../lib/k1scanservice/css/k1ss.min.css';
 
@@ -10,24 +12,21 @@ import '../../lib/k1scanservice/css/k1ss.min.css';
 })
 
 export class ScannerInterfaceDescktopComponent implements OnInit {
-  allDevices: Array<any>;
-  outputFilename: String = "";
-  selectedScanner: any = -1;
-  ocrOptions: Array<any>;
-  selectedOcrOption: any = -1;
-  fileTypeOptions: Array<any>;
-  selectedFileTypeOption: any = -1;
-  acquireResponse: any = null;
-  acquireResponseString: any = null;
-  acquireError: any = null;
+  @Output() completeAcquire = new EventEmitter<{acquireResponse: string, acquireError: string}>();
 
-  constructor() {
+  discoveredDevices: Array<any> = [];
+  outputFilename: String = '';
+  selectedScanner: any = 0;
+  ocrOptions: Array<any> = [];
+  selectedOcrOption: any = K1WebTwain.Options.OcrType.None;
+  fileTypeOptions: Array<any> = [];
+  selectedFileTypeOption: any = K1WebTwain.Options.OutputFiletype.PDF;
+  isDisplayUI: Boolean = false;
 
-  }
+  constructor() {}
 
   onClick() {
-    this.acquireResponse = null;
-    this.acquireError = null;
+    this.isDisplayUI = false;
 
     let acquireRequest = {
       deviceId: this.selectedScanner,
@@ -36,72 +35,75 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
       filename: this.outputFilename,
     };
 
-    console.log(acquireRequest);
-
     K1WebTwain.Acquire(acquireRequest)
       .then(response => {
-        console.log(response);
-        this.acquireResponse = response;
-        this.acquireResponseString = JSON.stringify(response, null, 4);
+        this.completeAcquire.emit({
+          acquireResponse: JSON.stringify(response.uploadResponse, null, 4),
+          acquireError: '',
+        });
       })
       .catch(err => {
         console.error(err);
-        let myError = null;
-
         if (!!err.responseText) {
-          myError = err.responseText;
+          this.completeAcquire.emit({
+            acquireResponse: '',
+            acquireError: err.responseText,
+          });
         }
 
         if (!!err.responseJSON) {
           try {
-            myError = JSON.stringify(err.responseJSON, null, 4);
-          }
-          catch (e) {
-            console.warn(e);
+            this.completeAcquire.emit({
+              acquireResponse: '',
+              acquireError: JSON.stringify(err.responseJSON, null, 4),
+            });
+          } catch (e) {
+              console.warn(e);
           }
         }
-
-        this.acquireError = myError;
       });
   }
 
   ngOnInit() {
-    var self = this;
+    let self = this;
     let configuration = {
-      onComplete: function (data) { },
-      viewButton: $(".k1ViewBtn"),
-      fileUploadURL: document.location.origin + '/Home/UploadFile',
-      clientID: "" + Date.now(),
-      setupFile: document.location.origin + '/Home/DownloadSetup',
-      interfacePath: "http://localhost:35497/assets/interface.html",
+      onComplete: function () { }, //function called when scan complete
+      viewButton: null, //This is optional. Specify a element that when clicked will view scanned document
+      fileUploadURL: document.location.origin + '/Home/UploadFile', //This is the service that the scanned document will be uploaded to when complete
+      clientID: "" + Date.now(), //This is a way to identify the user who is scanning.  It should be unique per user.  Session ID could be used if no user logged in
+      setupFile: document.location.origin + '/Home/DownloadSetup', //location of the installation file if service doesn't yet exist
+      interfacePath: document.location.origin + '/assets/interface.html', // This is optional if your application lives under a subdomain.
       scannerInterface: K1WebTwain.Options.ScannerInterface.Desktop,
-      scanButton: $("#scanbtn"),
+      scanButton: $("#scanbtn"), // the scan button
     };
 
-    K1WebTwain.Configure(configuration)
-      .then(x => {
-        K1WebTwain.GetDevices()
-          .then(devices => {
-            let mappedDevices = devices.map(device => {
-              return { value: device.id, display: device.name };
-            });
+    K1WebTwain.Configure(configuration).then(() => {
+      this.isDisplayUI = false;
 
-            let mappedOcrTypes = Object.keys(K1WebTwain.Options.OcrType).map((key) => {
-              return { value: K1WebTwain.Options.OcrType[key], display: key };
-            });
-
-            let mappedFileTypeOptions = Object.keys(K1WebTwain.Options.OutputFiletype).map((key) => {
-              return { value: K1WebTwain.Options.OutputFiletype[key], display: key };
-            });
-
-            this.ocrOptions = [{ value: -1, display: "Please Select" }].concat(mappedOcrTypes);
-            this.fileTypeOptions = [{ value: -1, display: "Please Select" }].concat(mappedFileTypeOptions);
-            this.allDevices = [{ value: -1, display: "Please Select" }].concat(mappedDevices);
-          })
-          .catch(ex => { });
-      })
-      .catch(x => {
-        console.log(x);
+      K1WebTwain.ResetService().then(function () {
+          setTimeout(() => {
+              self.renderSelection();
+              self.isDisplayUI = true;
+          },4000)
       });
+    }).catch(err => {
+        console.log(err);
+        K1WebTwain.ResetService();
+    });
+  }
+
+  renderSelection() {
+    K1WebTwain.GetDevices().then(devices => {
+        let mappedDevices = devices.map(device => ({ value: device.id, display: device.name }));
+        let mappedOcrTypes = convertRawOptions(K1WebTwain.Options.OcrType, true);
+        let mappedFileTypeOptions = convertRawOptions(K1WebTwain.Options.OutputFiletype, true);
+
+        this.ocrOptions = renderOptions(mappedOcrTypes);
+        this.fileTypeOptions = renderOptions(mappedFileTypeOptions);
+        this.discoveredDevices = renderOptions(mappedDevices);
+        this.outputFilename = generateScanFileName();
+    }).catch(err => {
+        console.error(err);
+    });
   }
 }

@@ -1,6 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_framework.js';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import * as $ from 'jquery'
+import { isEmpty } from 'lodash';
+import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_obfuscated.js';
+import { convertRawOptions, defaultOptionsValue, generateScanFileName, renderOptions } from '../../utils/scanningUtils';
+
 import '../../lib/bootstrap/dist/css/bootstrap.css';
 import '../../lib/k1scanservice/css/k1ss.min.css';
 
@@ -9,198 +12,173 @@ import '../../lib/k1scanservice/css/k1ss.min.css';
   templateUrl: './scanner-interface-hidden.component.html',
 })
 
-export class ScannerInterfaceHiddenComponent implements OnInit {
+export class ScannerInterfaceHiddenComponent implements OnInit {  
+  @Output() completeAcquire = new EventEmitter<{acquireResponse: string, acquireError: string}>();
+
   discoveredDevices: Array<any> = [];
-  selectedDevice: any = null;
+  selectedDevice: any = {};
   documentSourceOptions: Array<any> = [];
-  selectedDocumentSource: any = null;
+  selectedDocumentSource: any = 0;
   duplexOptions: Array<any> = [];
-  selectedDuplexOption: any = -1;
+  selectedDuplexOption: any = 0;
   pageSizeOptions: Array<any> = [];
-  selectedPageSizeOption: any = -1;
+  selectedPageSizeOption: any = 0;
   pixelTypeOptions: Array<any> = [];
-  selectedPixelTypeOption: any = -1;
+  selectedPixelTypeOption: any = 0;
   resolutionOptions: Array<any> = [];
-  selectedResolutionOption: any = -1;
+  selectedResolutionOption: any = 0;
   ocrOptions: Array<any> = [];
-  selectedOcrOption: any = -1;
+  selectedOcrOption: any = K1WebTwain.Options.OcrType.None;
   fileTypeOptions: Array<any> = [];
-  selectedFileTypeOption: any = -1;
-  outputFilename: string = "";
-  acquireResponse: any = null;
-  acquireResponseString: any = null;
-  acquireError: any = null;
+  selectedFileTypeOption: any = K1WebTwain.Options.OutputFiletype.PDF;
+  outputFilename: String = '';
+  isDisplayUI: Boolean = false;
 
-  constructor() {
+  constructor() {}
 
-  }
+  onDeviceChange(deviceId) {
+    K1WebTwain.Device(deviceId).then(deviceInfo => {
+      if(!isEmpty(deviceInfo)) {
+          let documentSourceOptions = Object.keys(deviceInfo.documentSourceIds).map((key) => {
+              return { value: key, display: deviceInfo.documentSourceIds[key].name };
+          });
 
-  onDeviceChange(e) {
-    console.log(e);
-    let device = K1WebTwain.Device(e.target.value);
-    console.log(device);
-    let documentSourceOptions = [];
+          this.selectedDevice = deviceInfo;
+          this.selectedDocumentSource = defaultOptionsValue(documentSourceOptions);
+          this.duplexOptions = [];
+          this.pageSizeOptions = [];
+          this.pixelTypeOptions = [];
+          this.resolutionOptions = [];
+          this.documentSourceOptions = renderOptions(documentSourceOptions);
 
-    if (device !== null) {
-      documentSourceOptions = Object.keys(device.documentSourceIds).map((key) => {
-        return { value: key, display: device.documentSourceIds[key].name };
-      });
-
-      if (documentSourceOptions.length > 0) {
-        documentSourceOptions = [{ value: -1, display: "Please Select" }].concat(documentSourceOptions)
+          this.onDocumentSourceChange(defaultOptionsValue(documentSourceOptions));
       }
-    }
-
-    this.selectedDevice = device;
-    this.selectedDocumentSource = null;
-    this.duplexOptions = [];
-    this.pageSizeOptions = [];
-    this.pixelTypeOptions = [];
-    this.resolutionOptions = [];
-    this.documentSourceOptions = documentSourceOptions;
+    }).catch(err => {
+        console.log(err);
+        this.selectedDevice = {};
+        this.selectedDocumentSource = 0;
+        this.duplexOptions = [];
+        this.pageSizeOptions = [];
+        this.pixelTypeOptions = [];
+        this.resolutionOptions = [];
+        this.documentSourceOptions = [];
+    })
   }
 
-  onDocumentSourceChange(e) {
-    let selectedDocumentSource = this.selectedDevice.documentSourceIds[e.target.value];
+  onDocumentSourceChange(documentSourceId) {
+    let selectedDocumentSource = this.selectedDevice.documentSourceIds[documentSourceId];
 
     let duplexOptions = [],
-      pageSizeOptions = [],
-      pixelTypeOptions = [],
-      resolutionOptions = [];
+        pageSizeOptions = [],
+        pixelTypeOptions = [],
+        resolutionOptions = [];
 
     if (!!selectedDocumentSource) {
-      duplexOptions = Object.keys(selectedDocumentSource.duplexIds).map((key) => {
-        return { value: key, display: selectedDocumentSource.duplexIds[key] };
-      });
-
-      if (duplexOptions.length > 0) {
-        duplexOptions = [{ value: -1, display: "Please Select" }].concat(duplexOptions)
-      }
-
-      pageSizeOptions = Object.keys(selectedDocumentSource.pageSizeIds).map((key) => {
-        return { value: key, display: selectedDocumentSource.pageSizeIds[key] };
-      });
-
-      if (pageSizeOptions.length > 0) {
-        pageSizeOptions = [{ value: -1, display: "Please Select" }].concat(pageSizeOptions)
-      }
-
-      pixelTypeOptions = Object.keys(selectedDocumentSource.pixelTypeIds).map((key) => {
-        return { value: key, display: selectedDocumentSource.pixelTypeIds[key] };
-      });
-
-      if (pixelTypeOptions.length > 0) {
-        pixelTypeOptions = [{ value: -1, display: "Please Select" }].concat(pixelTypeOptions)
-      }
-
-      resolutionOptions = Object.keys(selectedDocumentSource.resolutionIds).map((key) => {
-        return { value: key, display: selectedDocumentSource.resolutionIds[key] };
-      });
-
-      if (resolutionOptions.length > 0) {
-        resolutionOptions = [{ value: -1, display: "Please Select" }].concat(resolutionOptions)
-      }
-    }
-    else {
-      selectedDocumentSource = null;
+        duplexOptions = convertRawOptions(selectedDocumentSource.duplexIds);
+        pageSizeOptions = convertRawOptions(selectedDocumentSource.pageSizeIds);
+        pixelTypeOptions = convertRawOptions(selectedDocumentSource.pixelTypeIds);
+        resolutionOptions = convertRawOptions(selectedDocumentSource.resolutionIds);
+    } else {
+        selectedDocumentSource = null;
     }
 
-    console.log(selectedDocumentSource);
-
-    this.selectedDuplexOption = -1;
-    this.selectedPageSizeOption = -1;
-    this.selectedPixelTypeOption = -1;
-    this.selectedResolutionOption = -1;
-    this.selectedDocumentSource = selectedDocumentSource;
-    this.duplexOptions = duplexOptions;
-    this.pageSizeOptions = pageSizeOptions;
-    this.pixelTypeOptions = pixelTypeOptions;
-    this.resolutionOptions = resolutionOptions;
+    this.selectedDuplexOption = defaultOptionsValue(duplexOptions);
+    this.selectedPageSizeOption = defaultOptionsValue(pageSizeOptions);
+    this.selectedPixelTypeOption = defaultOptionsValue(pixelTypeOptions);
+    this.selectedResolutionOption = defaultOptionsValue(resolutionOptions);
+    this.selectedDocumentSource = documentSourceId;
+    this.duplexOptions = renderOptions(duplexOptions);
+    this.pageSizeOptions = renderOptions(pageSizeOptions);
+    this.pixelTypeOptions = renderOptions(pixelTypeOptions);
+    this.resolutionOptions = renderOptions(resolutionOptions);
   }
 
-
   onClick() {
-    this.acquireResponse = null;
-    this.acquireError = null;
+    this.isDisplayUI = false;
 
     let acquireRequest = {
       deviceId: this.selectedDevice.id,
       resolutionId: this.selectedResolutionOption,
       pixelTypeId: this.selectedPixelTypeOption,
       pageSizeId: this.selectedPageSizeOption,
-      documentSourceId: this.selectedDocumentSource.id,
+      documentSourceId: this.selectedDocumentSource,
       duplexId: this.selectedDuplexOption,
       filetype: this.selectedFileTypeOption,
       ocrType: this.selectedOcrOption,
       filename: this.outputFilename,
     };
 
-    console.log(acquireRequest);
-
     K1WebTwain.Acquire(acquireRequest)
-      .then(response => {
-        console.log(response);
-        this.acquireResponse = response;
-        this.acquireResponseString = JSON.stringify(response, null, 4);
-      })
-      .catch(err => {
-        console.error(err);
-        let myError = null;
-
-        if (!!err.responseText) {
-          myError = err.responseText;
-        }
-
-        if (!!err.responseJSON) {
-          try {
-            myError = JSON.stringify(err.responseJSON, null, 4);
-          }
-          catch (e) {
-            console.warn(e);
-          }
-        }
-
-        this.acquireError = myError;
+    .then(response => {
+      this.completeAcquire.emit({
+        acquireResponse: JSON.stringify(response.uploadResponse, null, 4),
+        acquireError: '',
       });
+    })
+    .catch(err => {
+      console.error(err);
+      if (!!err.responseText) {
+        this.completeAcquire.emit({
+          acquireResponse: '',
+          acquireError: err.responseText,
+        });
+      }
+
+      if (!!err.responseJSON) {
+        try {
+          this.completeAcquire.emit({
+            acquireResponse: '',
+            acquireError: JSON.stringify(err.responseJSON, null, 4),
+          });
+        } catch (e) {
+            console.warn(e);
+        }
+      }
+    });
   }
 
   ngOnInit() {
-    var self = this;
+    let self = this;
     let configuration = {
-      onComplete: function (data) { },
-      viewButton: $(".k1ViewBtn"),
-      fileUploadURL: document.location.origin + '/Home/UploadFile',
-      clientID: "" + Date.now(),
-      setupFile: document.location.origin + '/Home/DownloadSetup',
-      interfacePath: "http://localhost:35497/assets/interface.html",
+      onComplete: function () { }, //function called when scan complete
+      viewButton: null, //This is optional. Specify a element that when clicked will view scanned document
+      fileUploadURL: document.location.origin + '/Home/UploadFile', //This is the service that the scanned document will be uploaded to when complete
+      clientID: "" + Date.now(), //This is a way to identify the user who is scanning.  It should be unique per user.  Session ID could be used if no user logged in
+      setupFile: document.location.origin + '/Home/DownloadSetup', //location of the installation file if service doesn't yet exist
+      interfacePath: document.location.origin + '/assets/interface.html', // This is optional if your application lives under a subdomain.
       scannerInterface: K1WebTwain.Options.ScannerInterface.Hidden,
-      scanButton: $("#scanbtn"),
+      scanButton: $("#scanbtn"), // the scan button
     };
 
-    K1WebTwain.Configure(configuration)
-      .then(x => {
-        K1WebTwain.GetDevices()
-          .then(devices => {
-            let mappedDevices = devices.map(device => {
-              return { value: device.id, display: device.name };
-            });
+    K1WebTwain.Configure(configuration).then(() => {
+      this.isDisplayUI = false;
 
-            let mappedOcrTypes = Object.keys(K1WebTwain.Options.OcrType).map((key) => {
-              return { value: K1WebTwain.Options.OcrType[key], display: key };
-            });
-
-            let mappedFileTypeOptions = Object.keys(K1WebTwain.Options.OutputFiletype).map((key) => {
-              return { value: K1WebTwain.Options.OutputFiletype[key], display: key };
-            });
-
-            this.ocrOptions = [{ value: -1, display: "Please Select" }].concat(mappedOcrTypes);
-            this.fileTypeOptions = [{ value: -1, display: "Please Select" }].concat(mappedFileTypeOptions);
-            this.discoveredDevices = [{ value: -1, display: "Please Select" }].concat(mappedDevices);
-          })
-          .catch(ex => { });
-      })
-      .catch(x => {
-        console.log(x);
+      K1WebTwain.ResetService().then(function () {
+          setTimeout(() => {
+              self.renderSelection();
+              self.isDisplayUI = true;
+          },4000)
       });
+    }).catch(err => {
+        console.log(err);
+        K1WebTwain.ResetService();
+    });
+  }
+
+  renderSelection() {
+    K1WebTwain.GetDevices().then(devices => {
+        let mappedDevices = devices.map(device => ({ value: device.id, display: device.name }));
+        let mappedOcrTypes = convertRawOptions(K1WebTwain.Options.OcrType, true);
+        let mappedFileTypeOptions = convertRawOptions(K1WebTwain.Options.OutputFiletype, true);
+
+        this.ocrOptions = renderOptions(mappedOcrTypes);
+        this.fileTypeOptions = renderOptions(mappedFileTypeOptions);
+        this.discoveredDevices = renderOptions(mappedDevices);
+        this.outputFilename = generateScanFileName();
+
+        this.onDeviceChange(defaultOptionsValue(mappedDevices));
+    }).catch(err => {
+        console.error(err);
+    });
   }
 }
