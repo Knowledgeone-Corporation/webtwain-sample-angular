@@ -12,6 +12,7 @@ import { ScannerInterfaceVisibleComponent } from './scanner-interface-visible/sc
 import { ScannerInterfaceWebComponent } from './scanner-interface-web/scanner-interface-web.component';
 import { ScannerInterfaceDescktopComponent } from './scanner-interface-desktop/scanner-interface-desktop.component';
 import { ScannerInterfaceHiddenComponent } from './scanner-interface-hidden/scanner-interface-hidden.component';
+import { CommonModule } from '@angular/common';
 
 
 @NgModule({
@@ -27,6 +28,7 @@ import { ScannerInterfaceHiddenComponent } from './scanner-interface-hidden/scan
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
+    CommonModule,
     HttpClientModule,
     FormsModule,
     RouterModule.forRoot([

@@ -1,5 +1,5 @@
 <div class="container">
-  <div><h1>Scan Demo Page: Angular</h1></div>
+  <div><h1 class="mt-3 mb-3">Scan Demo Page: Angular</h1></div>
   <div class="alert alert-info alert-dismissible show" role="alert">
     <strong>Note: </strong>The demonstration service has the following limitations;
     - generated documents contain a watermark,
@@ -7,25 +7,25 @@
     - OCR is limited to the first page of the document.
     These limitations are not present in the licensed product.
   </div>
-
-  <br />
-
   <div class="form-group">
-    <label>Interface Option</label>
+    <label class="scanning-label">Interface Option</label>
     <div>
-      <select id="interface-option-dropdown" (change)="onInterfaceChange($event.target.value)" class="form-control">
-        <option>Please select...</option>
-        <option value="0">Hidden: no user interface will be shown</option>
-        <option value="1">Visible: WebTWAIN user interface will be shown</option>
-        <option value="2">Web: only the WebTWAIN user interface will be shown</option>
-        <option value="3">Desktop: only the scanner's TWAIN user interface will be shown</option>
+      <select id="interface-option-dropdown" value="{{selectedOption}}" (change)="onInterfaceChange($event.target.value)" class="form-control">
+        <option value="-1">Please select...</option>
+        <option value="0">Hidden : Not using Webtwain or Native UI</option>
+        <option value="1">Visible : Uses Webtwain and Native UI</option>
+        <option value="2">Web : only uses Webtwain UI</option>
+        <option value="3">Desktop : only uses Native scanner UI</option>
       </select>
     </div>
   </div>
 
-  <app-scanner-interface-hidden *ngIf="selectedOption == 0"></app-scanner-interface-hidden>
-  <app-scanner-interface-visible *ngIf="selectedOption == 1"></app-scanner-interface-visible>
-  <app-scanner-interface-web *ngIf="selectedOption == 2"></app-scanner-interface-web>
-  <app-scanner-interface-desktop *ngIf="selectedOption == 3"></app-scanner-interface-desktop>
+  <app-scanner-interface-hidden *ngIf="selectedOption == 0" (completeAcquire)="completeAcquire($event)"></app-scanner-interface-hidden>
+  <app-scanner-interface-visible *ngIf="selectedOption == 1" (completeAcquire)="completeAcquire($event)"></app-scanner-interface-visible>
+  <app-scanner-interface-web *ngIf="selectedOption == 2" (completeAcquire)="completeAcquire($event)"></app-scanner-interface-web>
+  <app-scanner-interface-desktop *ngIf="selectedOption == 3" (completeAcquire)="completeAcquire($event)"></app-scanner-interface-desktop>
+
+  <app-scan-completed *ngIf="!!acquireResponse" message="{{acquireResponse}}"></app-scan-completed>
+  <app-scan-error *ngIf="!!acquireError" message="{{acquireError}}"></app-scan-error>
 </div>
 
