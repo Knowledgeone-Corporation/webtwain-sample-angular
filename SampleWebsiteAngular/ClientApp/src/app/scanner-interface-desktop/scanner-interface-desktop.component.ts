@@ -43,22 +43,30 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
         });
       })
       .catch(err => {
-        console.error(err);
-        if (!!err.responseText) {
-          this.completeAcquire.emit({
-            acquireResponse: '',
-            acquireError: err.responseText,
-          });
-        }
-
-        if (!!err.responseJSON) {
-          try {
+        if(err) {
+          if (!!err.responseText) {
             this.completeAcquire.emit({
               acquireResponse: '',
-              acquireError: JSON.stringify(err.responseJSON, null, 4),
+              acquireError: err.responseText,
             });
-          } catch (e) {
-              console.warn(e);
+          }
+  
+          if (!!err.responseJSON) {
+            try {
+              this.completeAcquire.emit({
+                acquireResponse: '',
+                acquireError: JSON.stringify(err.responseJSON, null, 4),
+              });
+            } catch (e) {
+                console.warn(e);
+            }
+          }
+
+          if (err.statusText && err.statusText === 'timeout') {
+            this.completeAcquire.emit({
+              acquireResponse: '',
+              acquireError: 'Timeout error while processing/uploading scanned documents.',
+            });
           }
         }
       });
