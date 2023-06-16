@@ -2,9 +2,6 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import * as $ from 'jquery'
 import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_obfuscated.js';
 
-import '../../lib/bootstrap/dist/css/bootstrap.css';
-import '../../lib/k1scanservice/css/k1ss.min.css';
-
 @Component({
   selector: 'app-scanner-interface-web',
   templateUrl: './scanner-interface-web.component.html',
