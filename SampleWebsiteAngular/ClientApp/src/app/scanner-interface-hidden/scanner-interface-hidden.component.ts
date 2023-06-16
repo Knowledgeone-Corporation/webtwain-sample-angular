@@ -106,32 +106,40 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
     };
 
     K1WebTwain.Acquire(acquireRequest)
-    .then(response => {
-      this.completeAcquire.emit({
-        acquireResponse: JSON.stringify(response.uploadResponse, null, 4),
-        acquireError: '',
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      if (!!err.responseText) {
+      .then(response => {
         this.completeAcquire.emit({
-          acquireResponse: '',
-          acquireError: err.responseText,
+          acquireResponse: JSON.stringify(response.uploadResponse, null, 4),
+          acquireError: '',
         });
-      }
-
-      if (!!err.responseJSON) {
-        try {
-          this.completeAcquire.emit({
-            acquireResponse: '',
-            acquireError: JSON.stringify(err.responseJSON, null, 4),
-          });
-        } catch (e) {
-            console.warn(e);
+      })
+      .catch(err => {
+        if(err) {
+          if (!!err.responseText) {
+            this.completeAcquire.emit({
+              acquireResponse: '',
+              acquireError: err.responseText,
+            });
+          }
+    
+          if (!!err.responseJSON) {
+            try {
+              this.completeAcquire.emit({
+                acquireResponse: '',
+                acquireError: JSON.stringify(err.responseJSON, null, 4),
+              });
+            } catch (e) {
+                console.warn(e);
+            }
+          }
+    
+          if (err.statusText && err.statusText === 'timeout') {
+            this.completeAcquire.emit({
+              acquireResponse: '',
+              acquireError: 'Timeout error while processing/uploading scanned documents.',
+            });
+          }
         }
-      }
-    });
+      });
   }
 
   ngOnInit() {
