@@ -4,9 +4,6 @@ import { isEmpty } from 'lodash';
 import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_obfuscated.js';
 import { convertRawOptions, defaultOptionsValue, generateScanFileName, renderOptions } from '../../utils/scanningUtils';
 
-import '../../lib/bootstrap/dist/css/bootstrap.css';
-import '../../lib/k1scanservice/css/k1ss.min.css';
-
 @Component({
   selector: 'app-scanner-interface-hidden',
   templateUrl: './scanner-interface-hidden.component.html',

@@ -1,6 +1,4 @@
 import { Component } from '@angular/core';
-import '../../lib/bootstrap/dist/css/bootstrap.css';
-import '../../lib/k1scanservice/css/k1ss.min.css';
 
 @Component({
   selector: 'app-home',
