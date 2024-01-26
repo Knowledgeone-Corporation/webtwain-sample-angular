@@ -55,6 +55,11 @@
       <option *ngFor="let option of ocrOptions;" value="{{option.value}}">{{option.display}}</option>
     </select>
 
+    <label class="scanning-label mt-2">Save To</label>
+    <select id="sel-save-to" class="form-control" (change)="onSaveToTypeChange($event.target.value)">
+      <option *ngFor="let option of saveToTypeOptions;" value="{{option.value}}">{{option.display}}</option>
+    </select>
+
     <br />
 
     <div class="input-group">

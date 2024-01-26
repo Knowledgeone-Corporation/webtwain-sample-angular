@@ -1,7 +1,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import * as $ from 'jquery'
 import { isEmpty } from 'lodash';
-import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_obfuscated.js';
+import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss.js';
 import { convertRawOptions, defaultOptionsValue, generateScanFileName, renderOptions } from '../../utils/scanningUtils';
 
 @Component({
@@ -10,7 +10,7 @@ import { convertRawOptions, defaultOptionsValue, generateScanFileName, renderOpt
 })
 
 export class ScannerInterfaceHiddenComponent implements OnInit {  
-  @Output() completeAcquire = new EventEmitter<{acquireResponse: string, acquireError: string}>();
+  @Output() completeAcquire = new EventEmitter<{ acquireResponse: string, acquireError: string, saveToType?: number }>();
 
   discoveredDevices: Array<any> = [];
   selectedDevice: any = {};
@@ -26,6 +26,8 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
   selectedResolutionOption: any = 0;
   ocrOptions: Array<any> = [];
   selectedOcrOption: any = K1WebTwain.Options.OcrType.None;
+  saveToTypeOptions: Array<any> = [];
+  selectedSaveToOption: any = K1WebTwain.Options.SaveToType.Upload;
   fileTypeOptions: Array<any> = [];
   selectedFileTypeOption: any = K1WebTwain.Options.OutputFiletype.PDF;
   outputFilename: String = '';
@@ -103,13 +105,25 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
       filetype: this.selectedFileTypeOption,
       ocrType: this.selectedOcrOption,
       filename: this.outputFilename,
+      saveToType: this.selectedSaveToOption,
     };
 
     K1WebTwain.Acquire(acquireRequest)
       .then(response => {
+        let responseMessage = response.uploadResponse;
+
+        if (this.selectedSaveToOption === K1WebTwain.Options.SaveToType.Local) {
+          responseMessage = {
+            filename: response.filename,
+            fileSize: `${response.fileLength} (${response.sizeDisplay})`,
+            fileExtention: response.extension
+          };
+        }
+
         this.completeAcquire.emit({
-          acquireResponse: JSON.stringify(response.uploadResponse, null, 4),
+          acquireResponse: JSON.stringify(responseMessage, null, 4),
           acquireError: '',
+          saveToType: this.selectedSaveToOption
         });
       })
       .catch(err => {
@@ -182,15 +196,20 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
         let mappedDevices = devices.map(device => ({ value: device.id, display: device.name }));
         let mappedOcrTypes = convertRawOptions(K1WebTwain.Options.OcrType, true);
         let mappedFileTypeOptions = convertRawOptions(K1WebTwain.Options.OutputFiletype, true);
+        let mappedSaveToTypeOptions = convertRawOptions(K1WebTwain.Options.SaveToType, true);
 
         this.ocrOptions = renderOptions(mappedOcrTypes);
         this.fileTypeOptions = renderOptions(mappedFileTypeOptions);
         this.discoveredDevices = renderOptions(mappedDevices);
         this.outputFilename = generateScanFileName();
-
+        this.saveToTypeOptions = renderOptions(mappedSaveToTypeOptions);
         this.onDeviceChange(defaultOptionsValue(mappedDevices));
     }).catch(err => {
         console.error(err);
     });
+  }
+
+  onSaveToTypeChange(value: string) {
+    this.selectedSaveToOption = parseInt(value);
   }
 }

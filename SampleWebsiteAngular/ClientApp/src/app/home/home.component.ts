@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss.js';
 
 @Component({
   selector: 'app-home',
@@ -9,6 +10,7 @@ export class HomeComponent {
   selectedOption = -1;
   acquireResponse = '';
   acquireError = '';
+  saveToType = K1WebTwain.Options.SaveToType.Upload;
 
   constructor() {}
 
@@ -16,11 +18,13 @@ export class HomeComponent {
     this.selectedOption = value;
     this.acquireResponse = ''
     this.acquireError = '';
+    this.saveToType = K1WebTwain.Options.SaveToType.Upload;
   }
 
   completeAcquire($event) {
     this.selectedOption = -1;
     this.acquireResponse = $event.acquireResponse;
     this.acquireError = $event.acquireError;
+    this.saveToType = $event.saveToType;
   }
 }

@@ -1,6 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import * as $ from 'jquery'
-import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_obfuscated.js';
+import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss.js';
 
 @Component({
   selector: 'app-scanner-interface-web',
@@ -8,7 +8,7 @@ import { K1WebTwain } from '../../lib/k1scanservice/js/k1ss_obfuscated.js';
 })
 
 export class ScannerInterfaceWebComponent implements OnInit {
-  @Output() completeAcquire = new EventEmitter<{acquireResponse: string, acquireError: string}>();
+  @Output() completeAcquire = new EventEmitter<{ acquireResponse: string, acquireError: string, saveToType?: number }>();
   
   isDisplayUI: Boolean = false;
   
@@ -18,9 +18,20 @@ export class ScannerInterfaceWebComponent implements OnInit {
     var self = this;
     let configuration = {
       onComplete: function (response) {
+        let responseMessage = response.uploadResponse;
+
+        if (response.saveToType === K1WebTwain.Options.SaveToType.Local) {
+          responseMessage = {
+            filename: response.filename,
+            fileSize: `${response.fileLength} (${response.sizeDisplay})`,
+            fileExtention: response.extension
+          };
+        }
+
         self.completeAcquire.emit({
-          acquireResponse: JSON.stringify(response.uploadResponse, null, 4),
+          acquireResponse: JSON.stringify(responseMessage, null, 4),
           acquireError: '',
+          saveToType: response.saveToType
         });
       }, //function called when scan complete
       viewButton: null, //This is optional. Specify a element that when clicked will view scanned document
