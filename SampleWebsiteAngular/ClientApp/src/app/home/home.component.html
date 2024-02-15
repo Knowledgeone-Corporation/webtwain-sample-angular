@@ -25,7 +25,7 @@
   <app-scanner-interface-web *ngIf="selectedOption == 2" (completeAcquire)="completeAcquire($event)"></app-scanner-interface-web>
   <app-scanner-interface-desktop *ngIf="selectedOption == 3" (completeAcquire)="completeAcquire($event)"></app-scanner-interface-desktop>
 
-  <app-scan-completed *ngIf="!!acquireResponse" message="{{acquireResponse}}"></app-scan-completed>
+  <app-scan-completed *ngIf="!!acquireResponse" message="{{acquireResponse}}" saveToType="{{saveToType}}"></app-scan-completed>
   <app-scan-error *ngIf="!!acquireError" message="{{acquireError}}"></app-scan-error>
 </div>
 

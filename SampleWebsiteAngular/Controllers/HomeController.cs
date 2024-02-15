@@ -2,12 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace SampleWebsiteReact.Controllers
+namespace SampleWebsiteAngular.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -77,6 +74,13 @@ namespace SampleWebsiteReact.Controllers
             {
                 return File("~/files/K1ScanService.msi", "application/octet-stream", "K1ScanService.msi");
             }
+        }
+
+        [HttpGet]
+        [Route("K1Licence")]
+        public IActionResult K1Licence()
+        {
+            return PhysicalFile(Path.Combine(_hostingEnvironment.ContentRootPath, "Keys/Webtwainsdk.lic"), "text/plain");
         }
     }
 }
