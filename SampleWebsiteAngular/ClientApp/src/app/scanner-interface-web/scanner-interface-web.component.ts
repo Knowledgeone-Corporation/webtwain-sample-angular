@@ -54,9 +54,9 @@ export class ScannerInterfaceWebComponent implements OnInit {
       this.isDisplayUI = false;
 
       K1WebTwain.ResetService().then(function () {
-          setTimeout(() => {
+          //setTimeout(() => {
               self.isDisplayUI = true;
-          },4000)
+          //},4000)
       });
     }).catch(err => {
         console.log(err);

@@ -13,7 +13,7 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
 
   discoveredDevices: Array<any> = [];
   outputFilename: String = '';
-  selectedScanner: any = 0;
+  selectedScanner: any = -1;
   ocrOptions: Array<any> = [];
   selectedOcrOption: any = K1WebTwain.Options.OcrType.None;
   saveToTypeOptions: Array<any> = [];
@@ -21,8 +21,14 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
   fileTypeOptions: Array<any> = [];
   selectedFileTypeOption: any = K1WebTwain.Options.OutputFiletype.PDF;
   isDisplayUI: Boolean = false;
+  isDisableScanButton: Boolean = true;
 
   constructor() {}
+
+  onDeviceChange(deviceId) {
+    this.selectedScanner = deviceId;
+    this.isDisableScanButton = parseInt(deviceId) === -1;
+  }
 
   onClick() {
     this.isDisplayUI = false;
@@ -107,10 +113,10 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
       this.isDisplayUI = false;
 
       K1WebTwain.ResetService().then(function () {
-          setTimeout(() => {
+          //setTimeout(() => {
               self.renderSelection();
               self.isDisplayUI = true;
-          },4000)
+          //},4000)
       });
     }).catch(err => {
         console.log(err);

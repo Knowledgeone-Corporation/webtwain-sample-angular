@@ -64,7 +64,7 @@
 
     <div class="input-group">
       <div class="input-group-btn">
-        <button id="btn-acquire" type="button" class="btn btn-primary" aria-label="Bold" (click)="onClick()">
+        <button id="btn-acquire" type="button" class="btn btn-primary" aria-label="Bold" (click)="onClick()" [disabled]="isDisableScanButton">
           <span>Scan</span>
         </button>
       </div>

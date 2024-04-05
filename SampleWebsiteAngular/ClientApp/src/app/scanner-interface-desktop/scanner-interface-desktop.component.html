@@ -2,7 +2,7 @@
   <div>
     <div id="device-group" class="twain-feature-group">
       <label class="scanning-label">Device</label>
-      <select id="sel-scanner" class="form-control" (change)="selectedScanner=$event.target.value">
+      <select id="sel-scanner" class="form-control"  (change)="onDeviceChange($event.target.value)">
         <option *ngFor="let device of discoveredDevices;" value="{{device.value}}">{{device.display}}</option>
       </select>
     </div>
@@ -29,7 +29,7 @@
 
     <div class="input-group">
       <div class="input-group-btn">
-        <button id="btn-acquire" type="button" class="btn btn-primary" aria-label="Bold" (click)="onClick()">
+        <button id="btn-acquire" type="button" class="btn btn-primary" aria-label="Bold" (click)="onClick()" [disabled]="isDisableScanButton">
           <span>Scan</span>
         </button>
       </div>
