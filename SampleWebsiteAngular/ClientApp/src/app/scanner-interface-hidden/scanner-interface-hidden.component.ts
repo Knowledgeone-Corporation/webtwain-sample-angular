@@ -32,25 +32,35 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
   selectedFileTypeOption: any = K1WebTwain.Options.OutputFiletype.PDF;
   outputFilename: String = '';
   isDisplayUI: Boolean = false;
+  isDisableScanButton: Boolean = true;
 
   constructor() {}
 
   onDeviceChange(deviceId) {
     K1WebTwain.Device(deviceId).then(deviceInfo => {
-      if(!isEmpty(deviceInfo)) {
-          let documentSourceOptions = Object.keys(deviceInfo.documentSourceIds).map((key) => {
-              return { value: key, display: deviceInfo.documentSourceIds[key].name };
-          });
+      if (!isEmpty(deviceInfo)) {
+        let documentSourceOptions = Object.keys(deviceInfo.documentSourceIds).map((key) => {
+          return { value: key, display: deviceInfo.documentSourceIds[key].name };
+        });
 
-          this.selectedDevice = deviceInfo;
-          this.selectedDocumentSource = defaultOptionsValue(documentSourceOptions);
-          this.duplexOptions = [];
-          this.pageSizeOptions = [];
-          this.pixelTypeOptions = [];
-          this.resolutionOptions = [];
-          this.documentSourceOptions = renderOptions(documentSourceOptions);
-
-          this.onDocumentSourceChange(defaultOptionsValue(documentSourceOptions));
+        this.selectedDevice = deviceInfo;
+        this.selectedDocumentSource = defaultOptionsValue(documentSourceOptions);
+        this.duplexOptions = [];
+        this.pageSizeOptions = [];
+        this.pixelTypeOptions = [];
+        this.resolutionOptions = [];
+        this.documentSourceOptions = renderOptions(documentSourceOptions);
+        this.isDisableScanButton = false;
+        this.onDocumentSourceChange(defaultOptionsValue(documentSourceOptions));
+      } else {
+        this.selectedDevice = this.discoveredDevices[0];
+        this.selectedDocumentSource = 0;
+        this.duplexOptions = [];
+        this.pageSizeOptions = [];
+        this.pixelTypeOptions = [];
+        this.resolutionOptions = [];
+        this.documentSourceOptions = [];
+        this.isDisableScanButton = true;
       }
     }).catch(err => {
         console.log(err);
@@ -61,6 +71,7 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
         this.pixelTypeOptions = [];
         this.resolutionOptions = [];
         this.documentSourceOptions = [];
+        this.isDisableScanButton = true;
     })
   }
 
@@ -180,10 +191,10 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
       this.isDisplayUI = false;
 
       K1WebTwain.ResetService().then(function () {
-          setTimeout(() => {
+          //setTimeout(() => {
               self.renderSelection();
               self.isDisplayUI = true;
-          },4000)
+          //},4000)
       });
     }).catch(err => {
         console.log(err);
