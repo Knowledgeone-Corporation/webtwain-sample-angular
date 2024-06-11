@@ -1,73 +1,102 @@
-<div id="k1interface-hidden" class="show" *ngIf="isDisplayUI">
-  <div>
-    <div id="device-group" class="twain-feature-group">
-      <label class="scanning-label">Device</label>
-      <select id="sel-scanner" class="form-control" (change)="onDeviceChange($event.target.value)">
-        <option *ngFor="let device of discoveredDevices;" value="{{device.value}}">{{device.display}}</option>
-      </select>
-    </div>
-
-    <div id="size-group" class="twain-feature-group" *ngIf="!!documentSourceOptions.length">
-      <label class="scanning-label mt-2">Document Source:</label>
-      <select id="sel-page-size" class="form-control" (change)="onDocumentSourceChange($event.target.value)">
-        <option *ngFor="let option of documentSourceOptions;" value="{{option.value}}">{{option.display}}</option>
-      </select>
-    </div>
-
-    <div id="size-group" class="twain-feature-group" *ngIf="!!resolutionOptions.length">
-      <label class="scanning-label mt-2">Resolution (DPI):</label>
-      <select id="sel-page-size" class="form-control" (change)="selectedResolutionOption=$event.target.value">
-        <option *ngFor="let option of resolutionOptions;" value="{{option.value}}">{{option.display}}</option>
-      </select>
-    </div>
-
-    <div id="size-group" class="twain-feature-group" *ngIf="!!pixelTypeOptions.length">
-      <label class="scanning-label mt-2">Color:</label>
-      <select id="sel-page-size" class="form-control" (change)="selectedPixelTypeOption=$event.target.value">
-        <option *ngFor="let option of pixelTypeOptions;" value="{{option.value}}">{{option.display}}</option>
-      </select>
-    </div>
-
-    <div id="size-group" class="twain-feature-group" *ngIf="!!pageSizeOptions.length">
-      <label class="scanning-label mt-2">Page Size:</label>
-      <select id="sel-page-size" class="form-control" (change)="selectedPageSizeOption=$event.target.value">
-        <option *ngFor="let option of pageSizeOptions;" value="{{option.value}}">{{option.display}}</option>
-      </select>
-    </div>
-
-    <div id="size-group" class="twain-feature-group" *ngIf="!!duplexOptions.length">
-      <label class="scanning-label mt-2">Duplex Option:</label>
-      <select id="sel-page-size" class="form-control" (change)="selectedDuplexOption=$event.target.value">
-        <option *ngFor="let option of duplexOptions;" value="{{option.value}}">{{option.display}}</option>
-      </select>
-    </div>
-
-    <label class="scanning-label mt-2">Output File Name</label>
-    <input id="sel-output-name" class="form-control" type="text" value="{{outputFilename}}" placeholder="Please enter a file name" (change)="outputFilename=$event.target.value" />
-
-    <label class="scanning-label mt-2">Output File Type</label>
-    <select id="sel-output" class="form-control" (change)="selectedFileTypeOption=$event.target.value">
-      <option *ngFor="let option of fileTypeOptions;" value="{{option.value}}">{{option.display}}</option>
-    </select>
-
-    <label class="scanning-label mt-2">OCR Type</label>
-    <select id="sel-ocr-type" class="form-control" (change)="selectedOcrOption=$event.target.value">
-      <option *ngFor="let option of ocrOptions;" value="{{option.value}}">{{option.display}}</option>
-    </select>
-
-    <label class="scanning-label mt-2">Save To</label>
-    <select id="sel-save-to" class="form-control" (change)="onSaveToTypeChange($event.target.value)">
-      <option *ngFor="let option of saveToTypeOptions;" value="{{option.value}}">{{option.display}}</option>
-    </select>
-
-    <br />
-
+<div *ngIf="isDisplayUI">
+  <div id="k1interface-visible" *ngIf="!isDisplayScanningSection" class="show">
+    <div><label class="scanning-label">Initialize Scan Process:</label></div>
     <div class="input-group">
       <div class="input-group-btn">
-        <button id="btn-acquire" type="button" class="btn btn-primary" aria-label="Bold" (click)="onClick()" [disabled]="isDisableScanButton">
-          <span>Scan</span>
+        <button id="scanbtn" type="button" class="btn btn-primary" aria-label="Bold" (click)="renderSelection()">
+          <span>Initialize</span>
         </button>
       </div>
     </div>
   </div>
-</div>
+  <div id="k1interface-hidden" class="show" *ngIf="isDisplayScanningSection">
+    <div [ngClass]="{'section-disabled': !isDisableFinalizeSection}">
+      <div id="device-group" class="twain-feature-group">
+        <label class="scanning-label">Device</label>
+        <select id="sel-scanner" class="form-control" (change)="handleDeviceChange($event.target.value)"
+          [(ngModel)]="selectedDeviceId">
+          <option *ngFor="let device of discoveredDevices;" value="{{device.value}}">{{device.display}}</option>
+        </select>
+      </div>
+
+      <div id="size-group" class="twain-feature-group" *ngIf="!!documentSourceOptions.length">
+        <label class="scanning-label mt-2">Document Source:</label>
+        <select id="sel-page-size" class="form-control" (change)="onDocumentSourceChange($event.target.value)">
+          <option *ngFor="let option of documentSourceOptions;" value="{{option.value}}">{{option.display}}</option>
+        </select>
+      </div>
+
+      <div id="size-group" class="twain-feature-group" *ngIf="!!resolutionOptions.length">
+        <label class="scanning-label mt-2">Resolution (DPI):</label>
+        <select id="sel-page-size" class="form-control" (change)="selectedResolutionOption=$event.target.value">
+          <option *ngFor="let option of resolutionOptions;" value="{{option.value}}">{{option.display}}</option>
+        </select>
+      </div>
+
+      <div id="size-group" class="twain-feature-group" *ngIf="!!pixelTypeOptions.length">
+        <label class="scanning-label mt-2">Color:</label>
+        <select id="sel-page-size" class="form-control" (change)="selectedPixelTypeOption=$event.target.value">
+          <option *ngFor="let option of pixelTypeOptions;" value="{{option.value}}">{{option.display}}</option>
+        </select>
+      </div>
+
+      <div id="size-group" class="twain-feature-group" *ngIf="!!pageSizeOptions.length">
+        <label class="scanning-label mt-2">Page Size:</label>
+        <select id="sel-page-size" class="form-control" (change)="selectedPageSizeOption=$event.target.value">
+          <option *ngFor="let option of pageSizeOptions;" value="{{option.value}}">{{option.display}}</option>
+        </select>
+      </div>
+
+      <div id="size-group" class="twain-feature-group" *ngIf="!!duplexOptions.length">
+        <label class="scanning-label mt-2">Duplex Option:</label>
+        <select id="sel-page-size" class="form-control" (change)="selectedDuplexOption=$event.target.value">
+          <option *ngFor="let option of duplexOptions;" value="{{option.value}}">{{option.display}}</option>
+        </select>
+      </div>
+      <br />
+      <div class="input-group">
+        <div class="input-group-btn">
+          <button id="btn-acquire" type="button" class="btn btn-primary" aria-label="Bold"
+            (click)="handleAcquireClick()" [disabled]="isDisableScanButton">
+            <span>Scan</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div [ngClass]="{'section-disabled': isDisableFinalizeSection}">
+      <label class="scanning-label mt-2">Output File Name</label>
+      <input id="sel-output-name" class="form-control" type="text" value="{{outputFilename}}"
+        placeholder="Please enter a file name" (change)="outputFilename=$event.target.value" />
+      <label class="scanning-label mt-2">Output File Type</label>
+      <span class="filetype-restriction" *ngIf="isDisplayFileRestriction">
+        File types restricted for multiple page scans
+      </span>
+      <select id="sel-output" class="form-control" [(ngModel)]="selectedFileTypeOption"
+        (change)="handleFileTypeChange($event.target.value)">
+        <option *ngFor="let option of fileTypeOptions;" value="{{option.value}}">{{option.display}}</option>
+      </select>
+      <div *ngIf="isDisplayOCR">
+        <label class="scanning-label mt-2">OCR Type</label>
+        <select id="sel-ocr-type" class="form-control" [(ngModel)]="selectedOcrOption"
+          (change)="handlOcrTypeChange($event.target.value)">
+          <option *ngFor="let option of ocrOptions;" value="{{option.value}}">{{option.display}}</option>
+        </select>
+      </div>
+      <div class="input-group mb-3 mt-3">
+        <div class="input-group-btn">
+          <button id="btn-attach" type="button" class="btn btn-primary" aria-label="Bold"
+            (click)="handleAttachDocument()">
+            <span>ATTACH DOCUMENT</span>
+          </button>
+          <button id="btn-save-locally" type="button" class="btn btn-primary ml-2" aria-label="Bold"
+            (click)="handleSaveDocument()">
+            <span>SAVE LOCALLY</span>
+          </button>
+          <button id="btn-cancel-finalization" type="button" class="btn btn-primary ml-2" aria-label="Bold"
+            (click)="handleCancelFinalization()">
+            <span>CANCEL</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
