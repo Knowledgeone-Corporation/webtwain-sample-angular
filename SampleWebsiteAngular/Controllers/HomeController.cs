@@ -80,7 +80,7 @@ namespace SampleWebsiteAngular.Controllers
         [Route("K1Licence")]
         public IActionResult K1Licence()
         {
-            return PhysicalFile(Path.Combine(_hostingEnvironment.ContentRootPath, "Keys/Webtwainsdk.lic"), "text/plain");
+            return PhysicalFile(Path.Combine(_hostingEnvironment.ContentRootPath, "Keys", "Webtwainsdk.lic"), "text/plain");
         }
     }
 }
