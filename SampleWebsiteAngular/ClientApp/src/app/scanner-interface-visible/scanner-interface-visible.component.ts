@@ -54,9 +54,7 @@ export class ScannerInterfaceVisibleComponent implements OnInit {
       this.isDisplayUI = false;
 
       K1WebTwain.ResetService().then(function () {
-          //setTimeout(() => {
               self.isDisplayUI = true;
-          //},4000)
       });
     }).catch(err => {
         console.log(err);

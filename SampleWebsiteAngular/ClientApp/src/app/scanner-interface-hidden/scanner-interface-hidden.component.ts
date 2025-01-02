@@ -15,6 +15,7 @@ import {
   selector: "app-scanner-interface-hidden",
   templateUrl: "./scanner-interface-hidden.component.html",
 })
+
 export class ScannerInterfaceHiddenComponent implements OnInit {
   @Output() completeAcquire = new EventEmitter<{
     acquireResponse: string;
@@ -44,7 +45,6 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
   isDisableScanButton: Boolean = true;
   isDisplayScanningSection: Boolean = false;
   isDisableFinalizeSection: Boolean = true;
-  isDisplayFileRestriction: Boolean = false;
   isDisplayOCR: Boolean = false;
 
   constructor() {}
@@ -152,35 +152,7 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
     };
 
     K1WebTwain.StartScan(acquireRequest)
-      .then((response: { pageCount: number }) => {
-        if (response.pageCount > 1) {
-          this.isDisplayFileRestriction = true;
-          let fileType = this.selectedFileTypeOption;
-          if (
-            fileType === "JPG" ||
-            fileType === "GIF" ||
-            fileType === "PNG" ||
-            fileType === "BMP"
-          ) {
-            this.selectedFileTypeOption =
-              K1WebTwain.Options.OutputFiletype.TIFF;
-          }
-
-          this.fileTypeOptions = this.fileTypeOptions.filter(
-            (fileType) =>
-              fileType.value === "PDF" ||
-              fileType.value === "PDF/A" ||
-              fileType.value === "TIF"
-          );
-        } else {
-          this.isDisplayFileRestriction = false;
-          let mappedFileTypeOptions = convertRawOptions(
-            K1WebTwain.Options.OutputFiletype,
-            true
-          );
-          this.fileTypeOptions = renderOptions(mappedFileTypeOptions);
-        }
-
+      .then(() => {
         this.isDisableFinalizeSection = false;
         this.isDisableScanButton = true;
       })
@@ -214,9 +186,7 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
         this.isDisplayUI = false;
 
         K1WebTwain.ResetService().then(function () {
-          //setTimeout(() => {
           self.isDisplayUI = true;
-          //},4000)
         });
       })
       .catch((err) => {
