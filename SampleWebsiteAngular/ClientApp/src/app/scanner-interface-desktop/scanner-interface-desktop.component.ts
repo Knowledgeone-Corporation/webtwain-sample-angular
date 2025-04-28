@@ -5,6 +5,7 @@ import {
   convertRawOptions,
   generateScanFileName,
   getDefaultScanSettings,
+  getScannerDetails,
   saveDefaultScanSettings,
   renderOptions,
 } from "../../utils/scanningUtils";
@@ -31,7 +32,6 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
   isDisableScanButton: Boolean = true;
   isDisplayScanningSection: Boolean = false;
   isDisableFinalizeSection: Boolean = true;
-  isDisplayFileRestriction: Boolean = false;
   isDisplayOCR: Boolean = false;
 
   constructor() {}
@@ -40,11 +40,14 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
     this.selectedDeviceId = parseInt(deviceId);
     this.isDisableScanButton = parseInt(deviceId) === -1;
 
-    let defaultSettings = getDefaultScanSettings();
+    const defaultSettings = getDefaultScanSettings();
+    let scannerDetails = getScannerDetails(defaultSettings);
+    scannerDetails.ScanSource = this.selectedDeviceId;
+
     saveDefaultScanSettings(
       defaultSettings?.ScanType ?? this.selectedFileTypeOption,
       defaultSettings?.OCRType ?? this.selectedOcrOption,
-      deviceId
+      scannerDetails
     );
   }
 
@@ -54,35 +57,7 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
     };
 
     K1WebTwain.StartScan(acquireRequest)
-      .then((response: { pageCount: number }) => {
-        if (response.pageCount > 1) {
-          this.isDisplayFileRestriction = true;
-          let fileType = this.selectedFileTypeOption;
-          if (
-            fileType === "JPG" ||
-            fileType === "GIF" ||
-            fileType === "PNG" ||
-            fileType === "BMP"
-          ) {
-            this.selectedFileTypeOption =
-              K1WebTwain.Options.OutputFiletype.TIFF;
-          }
-
-          this.fileTypeOptions = this.fileTypeOptions.filter(
-            (fileType) =>
-              fileType.value === "PDF" ||
-              fileType.value === "PDF/A" ||
-              fileType.value === "TIF"
-          );
-        } else {
-          this.isDisplayFileRestriction = false;
-          let mappedFileTypeOptions = convertRawOptions(
-            K1WebTwain.Options.OutputFiletype,
-            true
-          );
-          this.fileTypeOptions = renderOptions(mappedFileTypeOptions);
-        }
-
+      .then(() => {
         this.isDisableFinalizeSection = false;
         this.isDisableScanButton = true;
       })
@@ -116,9 +91,7 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
         this.isDisplayUI = false;
 
         K1WebTwain.ResetService().then(function () {
-          //setTimeout(() => {
           self.isDisplayUI = true;
-          //},4000)
         });
       })
       .catch((err) => {
@@ -151,13 +124,15 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
         this.outputFilename = generateScanFileName();
         this.isDisplayScanningSection = true;
 
-        let scanSettings = getDefaultScanSettings();
-        if (scanSettings) {
+        const scanSettings = getDefaultScanSettings();
+        const deviceId = scanSettings?.ScannerDetails?.ScanSource;
+
+        if (deviceId) {
           this.selectedFileTypeOption = scanSettings.ScanType;
           this.selectedOcrOption = scanSettings.UseOCR
             ? scanSettings.OCRType
             : K1WebTwain.Options.OcrType.None;
-          this.handleDeviceChange(scanSettings.ScanSource);
+          this.handleDeviceChange(deviceId);
         }
 
         this.isDisplayOCR =
@@ -165,8 +140,7 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
             K1WebTwain.Options.OutputFiletype.PDF ||
           this.selectedFileTypeOption ===
             K1WebTwain.Options.OutputFiletype["PDF/A"];
-      })
-      .catch((err) => {
+      }).catch((err) => {
         console.error(err);
       });
   }
@@ -176,21 +150,22 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
     this.isDisplayOCR =
       outputType === K1WebTwain.Options.OutputFiletype.PDF ||
       outputType === K1WebTwain.Options.OutputFiletype["PDF/A"];
-    let defaultSettings = getDefaultScanSettings();
+
+    const defaultSettings = getDefaultScanSettings();
+
     saveDefaultScanSettings(
       outputType,
-      defaultSettings?.OCRType ?? this.selectedOcrOption,
-      defaultSettings?.ScanSource ?? this.selectedDeviceId
+      defaultSettings?.OCRType ?? this.selectedOcrOption
     );
   }
 
   handlOcrTypeChange(ocrType: any) {
     this.selectedOcrOption = ocrType;
-    let defaultSettings = getDefaultScanSettings();
+    const defaultSettings = getDefaultScanSettings();
+
     saveDefaultScanSettings(
       defaultSettings?.ScanType ?? this.selectedFileTypeOption,
-      ocrType,
-      defaultSettings?.ScanSource ?? this.selectedDeviceId
+      ocrType
     );
   }
 

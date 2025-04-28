@@ -6,6 +6,7 @@ import {
   convertRawOptions,
   defaultOptionsValue,
   getDefaultScanSettings,
+  getScannerDetails,
   saveDefaultScanSettings,
   generateScanFileName,
   renderOptions,
@@ -15,6 +16,7 @@ import {
   selector: "app-scanner-interface-hidden",
   templateUrl: "./scanner-interface-hidden.component.html",
 })
+
 export class ScannerInterfaceHiddenComponent implements OnInit {
   @Output() completeAcquire = new EventEmitter<{
     acquireResponse: string;
@@ -44,7 +46,6 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
   isDisableScanButton: Boolean = true;
   isDisplayScanningSection: Boolean = false;
   isDisableFinalizeSection: Boolean = true;
-  isDisplayFileRestriction: Boolean = false;
   isDisplayOCR: Boolean = false;
 
   constructor() {}
@@ -52,6 +53,8 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
   handleDeviceChange(deviceId: any) {
     K1WebTwain.Device(deviceId)
       .then((deviceInfo) => {
+        let defaultSettings = getDefaultScanSettings();
+
         if (!isEmpty(deviceInfo)) {
           let documentSourceOptions = Object.keys(
             deviceInfo.documentSourceIds
@@ -62,19 +65,17 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
             };
           });
 
+          const defaultDocumentSource = defaultSettings?.ScannerDetails?.DocumentSource ?? defaultOptionsValue(documentSourceOptions);
+
           this.setDeviceInfo(deviceInfo);
-          this.selectedDocumentSource = defaultOptionsValue(
-            documentSourceOptions
-          );
+          this.selectedDocumentSource = defaultDocumentSource;
           this.duplexOptions = [];
           this.pageSizeOptions = [];
           this.pixelTypeOptions = [];
           this.resolutionOptions = [];
           this.documentSourceOptions = renderOptions(documentSourceOptions);
           this.isDisableScanButton = false;
-          this.onDocumentSourceChange(
-            defaultOptionsValue(documentSourceOptions)
-          );
+          this.handleDocumentSourceChange(defaultDocumentSource);
         } else {
           this.setDeviceInfo(this.discoveredDevices[0]);
           this.duplexOptions = [];
@@ -85,12 +86,9 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
           this.isDisableScanButton = true;
         }
 
-        let defaultSettings = getDefaultScanSettings();
-        saveDefaultScanSettings(
-          defaultSettings?.ScanType ?? this.selectedFileTypeOption,
-          defaultSettings?.OCRType ?? this.selectedOcrOption,
-          deviceId
-        );
+        let scannerDetails = getScannerDetails(defaultSettings);
+        scannerDetails.ScanSource = deviceId;
+        this.saveDefaultScannerDetails(defaultSettings, scannerDetails);
       })
       .catch((err) => {
         console.log(err);
@@ -105,12 +103,23 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
       });
   }
 
+  saveDefaultScannerDetails(defaultSettings, scannerDetails) {
+    saveDefaultScanSettings(
+      defaultSettings?.ScanType ?? this.selectedFileTypeOption,
+      defaultSettings?.OCRType ?? this.selectedOcrOption,
+      scannerDetails
+    );
+  }
+
   setDeviceInfo(deviceInfo) {
     this.selectedDeviceInfo = deviceInfo;
     this.selectedDeviceId = deviceInfo?.id ?? deviceInfo?.value ?? -1;
   }
 
-  onDocumentSourceChange(documentSourceId: string | number) {
+  handleDocumentSourceChange(documentSourceId: string | number) {
+    let defaultSettings = getDefaultScanSettings();
+    let scannerDetails = getScannerDetails(defaultSettings);
+
     let selectedDocumentSource =
       this.selectedDeviceInfo.documentSourceIds[documentSourceId];
 
@@ -130,15 +139,50 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
       selectedDocumentSource = null;
     }
 
-    this.selectedDuplexOption = defaultOptionsValue(duplexOptions);
-    this.selectedPageSizeOption = defaultOptionsValue(pageSizeOptions);
-    this.selectedPixelTypeOption = defaultOptionsValue(pixelTypeOptions);
-    this.selectedResolutionOption = defaultOptionsValue(resolutionOptions);
+    this.selectedDuplexOption = scannerDetails?.Duplex ?? defaultOptionsValue(duplexOptions);
+    this.selectedPageSizeOption = scannerDetails?.PageSize ?? defaultOptionsValue(pageSizeOptions);
+    this.selectedPixelTypeOption = scannerDetails?.Color ?? defaultOptionsValue(pixelTypeOptions);
+    this.selectedResolutionOption = scannerDetails?.Resolution ?? defaultOptionsValue(resolutionOptions);
     this.selectedDocumentSource = documentSourceId;
     this.duplexOptions = renderOptions(duplexOptions);
     this.pageSizeOptions = renderOptions(pageSizeOptions);
     this.pixelTypeOptions = renderOptions(pixelTypeOptions);
     this.resolutionOptions = renderOptions(resolutionOptions);
+
+    scannerDetails.DocumentSource = documentSourceId;
+    this.saveDefaultScannerDetails(defaultSettings, scannerDetails);
+  }
+
+  handleResolutionChange(selectedResolution) {
+    this.selectedResolutionOption = selectedResolution;
+    let defaultSettings = getDefaultScanSettings();
+    let scannerDetails = getScannerDetails(defaultSettings);
+    scannerDetails.Resolution = selectedResolution;
+    this.saveDefaultScannerDetails(defaultSettings, scannerDetails);
+  }
+
+  handlePixelTypeChange(selectedPixelType) {
+    this.selectedPixelTypeOption = selectedPixelType;
+    let defaultSettings = getDefaultScanSettings();
+    let scannerDetails = getScannerDetails(defaultSettings);
+    scannerDetails.Color = selectedPixelType;
+    this.saveDefaultScannerDetails(defaultSettings, scannerDetails);
+  }
+
+  handlePageSizeChange(selectedPageSize) {
+    this.selectedPageSizeOption = selectedPageSize;
+    let defaultSettings = getDefaultScanSettings();
+    let scannerDetails = getScannerDetails(defaultSettings);
+    scannerDetails.PageSize = selectedPageSize;
+    this.saveDefaultScannerDetails(defaultSettings, scannerDetails);
+  }
+
+  handleDuplexChange(selectedDuplex) {
+    this.selectedDuplexOption = selectedDuplex;
+    let defaultSettings = getDefaultScanSettings();
+    let scannerDetails = getScannerDetails(defaultSettings);
+    scannerDetails.Duplex = selectedDuplex;
+    this.saveDefaultScannerDetails(defaultSettings, scannerDetails);
   }
 
   handleAcquireClick() {
@@ -152,35 +196,7 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
     };
 
     K1WebTwain.StartScan(acquireRequest)
-      .then((response: { pageCount: number }) => {
-        if (response.pageCount > 1) {
-          this.isDisplayFileRestriction = true;
-          let fileType = this.selectedFileTypeOption;
-          if (
-            fileType === "JPG" ||
-            fileType === "GIF" ||
-            fileType === "PNG" ||
-            fileType === "BMP"
-          ) {
-            this.selectedFileTypeOption =
-              K1WebTwain.Options.OutputFiletype.TIFF;
-          }
-
-          this.fileTypeOptions = this.fileTypeOptions.filter(
-            (fileType) =>
-              fileType.value === "PDF" ||
-              fileType.value === "PDF/A" ||
-              fileType.value === "TIF"
-          );
-        } else {
-          this.isDisplayFileRestriction = false;
-          let mappedFileTypeOptions = convertRawOptions(
-            K1WebTwain.Options.OutputFiletype,
-            true
-          );
-          this.fileTypeOptions = renderOptions(mappedFileTypeOptions);
-        }
-
+      .then(() => {
         this.isDisableFinalizeSection = false;
         this.isDisableScanButton = true;
       })
@@ -214,9 +230,7 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
         this.isDisplayUI = false;
 
         K1WebTwain.ResetService().then(function () {
-          //setTimeout(() => {
           self.isDisplayUI = true;
-          //},4000)
         });
       })
       .catch((err) => {
@@ -249,13 +263,15 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
         this.outputFilename = generateScanFileName();
         this.isDisplayScanningSection = true;
 
-        let scanSettings = getDefaultScanSettings();
-        if (scanSettings) {
+        const scanSettings = getDefaultScanSettings();
+        const deviceId = scanSettings?.ScannerDetails?.ScanSource;
+
+        if (deviceId) {
           this.selectedFileTypeOption = scanSettings.ScanType;
           this.selectedOcrOption = scanSettings.UseOCR
             ? scanSettings.OCRType
             : K1WebTwain.Options.OcrType.None;
-          this.handleDeviceChange(scanSettings.ScanSource);
+          this.handleDeviceChange(deviceId);
         } else {
           this.handleDeviceChange(defaultOptionsValue(mappedDevices));
         }
@@ -277,20 +293,20 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
       outputType === K1WebTwain.Options.OutputFiletype.PDF ||
       outputType === K1WebTwain.Options.OutputFiletype["PDF/A"];
     let defaultSettings = getDefaultScanSettings();
+
     saveDefaultScanSettings(
       outputType,
-      defaultSettings?.OCRType ?? this.selectedOcrOption,
-      defaultSettings?.ScanSource ?? this.selectedDeviceId
+      defaultSettings?.OCRType ?? this.selectedOcrOption
     );
   }
 
   handlOcrTypeChange(ocrType: any) {
     this.selectedOcrOption = ocrType;
     let defaultSettings = getDefaultScanSettings();
+
     saveDefaultScanSettings(
       defaultSettings?.ScanType ?? this.selectedFileTypeOption,
-      ocrType,
-      defaultSettings?.ScanSource ?? this.selectedDeviceId
+      ocrType
     );
   }
 
