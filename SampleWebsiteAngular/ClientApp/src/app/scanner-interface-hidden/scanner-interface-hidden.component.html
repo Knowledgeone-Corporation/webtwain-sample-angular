@@ -21,35 +21,35 @@
 
       <div id="size-group" class="twain-feature-group" *ngIf="!!documentSourceOptions.length">
         <label class="scanning-label mt-2">Document Source:</label>
-        <select id="sel-page-size" class="form-control" (change)="onDocumentSourceChange($event.target.value)">
+        <select id="sel-page-size" class="form-control" (change)="handleDocumentSourceChange($event.target.value)">
           <option *ngFor="let option of documentSourceOptions;" value="{{option.value}}">{{option.display}}</option>
         </select>
       </div>
 
       <div id="size-group" class="twain-feature-group" *ngIf="!!resolutionOptions.length">
         <label class="scanning-label mt-2">Resolution (DPI):</label>
-        <select id="sel-page-size" class="form-control" (change)="selectedResolutionOption=$event.target.value">
+        <select id="sel-page-size" class="form-control" (change)="handleResolutionChange($event.target.value)">
           <option *ngFor="let option of resolutionOptions;" value="{{option.value}}">{{option.display}}</option>
         </select>
       </div>
 
       <div id="size-group" class="twain-feature-group" *ngIf="!!pixelTypeOptions.length">
         <label class="scanning-label mt-2">Color:</label>
-        <select id="sel-page-size" class="form-control" (change)="selectedPixelTypeOption=$event.target.value">
+        <select id="sel-page-size" class="form-control" (change)="handlePixelTypeChange($event.target.value)">
           <option *ngFor="let option of pixelTypeOptions;" value="{{option.value}}">{{option.display}}</option>
         </select>
       </div>
 
       <div id="size-group" class="twain-feature-group" *ngIf="!!pageSizeOptions.length">
         <label class="scanning-label mt-2">Page Size:</label>
-        <select id="sel-page-size" class="form-control" (change)="selectedPageSizeOption=$event.target.value">
+        <select id="sel-page-size" class="form-control" (change)="handlePageSizeChange($event.target.value)">
           <option *ngFor="let option of pageSizeOptions;" value="{{option.value}}">{{option.display}}</option>
         </select>
       </div>
 
       <div id="size-group" class="twain-feature-group" *ngIf="!!duplexOptions.length">
         <label class="scanning-label mt-2">Duplex Option:</label>
-        <select id="sel-page-size" class="form-control" (change)="selectedDuplexOption=$event.target.value">
+        <select id="sel-page-size" class="form-control" (change)="handleDuplexChange($event.target.value)">
           <option *ngFor="let option of duplexOptions;" value="{{option.value}}">{{option.display}}</option>
         </select>
       </div>
