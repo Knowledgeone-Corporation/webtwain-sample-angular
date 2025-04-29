@@ -125,9 +125,9 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
         this.isDisplayScanningSection = true;
 
         const scanSettings = getDefaultScanSettings();
-        const deviceId = scanSettings?.ScannerDetails?.ScanSource;
 
-        if (deviceId) {
+        if (scanSettings) {
+          const deviceId = scanSettings?.ScannerDetails?.ScanSource ?? "-1";
           this.selectedFileTypeOption = scanSettings.ScanType;
           this.selectedOcrOption = scanSettings.UseOCR
             ? scanSettings.OCRType
