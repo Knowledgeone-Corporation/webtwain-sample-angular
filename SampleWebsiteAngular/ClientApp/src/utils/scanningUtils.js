@@ -36,7 +36,7 @@ export const saveDefaultScanSettings = (outputType, ocrType, scannerDetails = nu
           ScanType: outputType,
           UseOCR: isUseOcr,
           OCRType: ocrType,
-          ScanSource: scannerDetails ?? getScannerDetails(null)
+          ScannerDetails: scannerDetails ?? getScannerDetails(null)
         }
     }
 
