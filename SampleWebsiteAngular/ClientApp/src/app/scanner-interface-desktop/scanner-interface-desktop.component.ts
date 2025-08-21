@@ -28,6 +28,8 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
   selectedOcrOption: any = K1WebTwain.Options.OcrType.None;
   fileTypeOptions: Array<any> = [];
   selectedFileTypeOption: any = K1WebTwain.Options.OutputFiletype.PDF;
+  compressionOptions: Array<any> = [];
+  selectedCompressionOption: any = "0";
   isDisplayUI: Boolean = false;
   isDisableScanButton: Boolean = true;
   isDisplayScanningSection: Boolean = false;
@@ -47,7 +49,8 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
     saveDefaultScanSettings(
       defaultSettings?.ScanType ?? this.selectedFileTypeOption,
       defaultSettings?.OCRType ?? this.selectedOcrOption,
-      scannerDetails
+      scannerDetails,
+      this.selectedCompressionOption
     );
   }
 
@@ -118,8 +121,18 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
           true
         );
 
+        let mappedCompressionOptions = convertRawOptions(
+          K1WebTwain.Options.FileCompressionType,
+          true
+        );
+
         this.ocrOptions = renderOptions(mappedOcrTypes);
         this.fileTypeOptions = renderOptions(mappedFileTypeOptions);
+        this.compressionOptions = renderOptions(mappedCompressionOptions);
+        this.selectedCompressionOption =
+          mappedCompressionOptions.length > 0
+            ? mappedCompressionOptions[0].value
+            : "0";
         this.discoveredDevices = renderOptions(mappedDevices);
         this.outputFilename = generateScanFileName();
         this.isDisplayScanningSection = true;
@@ -132,6 +145,11 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
           this.selectedOcrOption = scanSettings.UseOCR
             ? scanSettings.OCRType
             : K1WebTwain.Options.OcrType.None;
+          this.selectedCompressionOption =
+            scanSettings.FileCompressionType ??
+            (mappedCompressionOptions.length > 0
+              ? mappedCompressionOptions[0].value
+              : "0");
           this.handleDeviceChange(deviceId);
         }
 
@@ -155,7 +173,9 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
 
     saveDefaultScanSettings(
       outputType,
-      defaultSettings?.OCRType ?? this.selectedOcrOption
+      defaultSettings?.OCRType ?? this.selectedOcrOption,
+      null,
+      this.selectedCompressionOption
     );
   }
 
@@ -165,7 +185,21 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
 
     saveDefaultScanSettings(
       defaultSettings?.ScanType ?? this.selectedFileTypeOption,
-      ocrType
+      ocrType,
+      null,
+      this.selectedCompressionOption
+    );
+  }
+
+  handleCompressionChange(compressionType: any) {
+    this.selectedCompressionOption = compressionType;
+    const defaultSettings = getDefaultScanSettings();
+
+    saveDefaultScanSettings(
+      defaultSettings?.ScanType ?? this.selectedFileTypeOption,
+      defaultSettings?.OCRType ?? this.selectedOcrOption,
+      null,
+      compressionType
     );
   }
 
@@ -184,6 +218,7 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
     K1WebTwain.ValidatePageSize({
       ocrType: this.selectedOcrOption,
       fileType: this.selectedFileTypeOption,
+      fileCompressionType: this.selectedCompressionOption,
       saveToType: K1WebTwain.Options.SaveToType.Upload,
       generateDocument: () => {
         this.generateDocument(K1WebTwain.Options.SaveToType.Upload);
@@ -195,6 +230,7 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
     K1WebTwain.ValidatePageSize({
       ocrType: this.selectedOcrOption,
       fileType: this.selectedFileTypeOption,
+      fileCompressionType: this.selectedCompressionOption,
       saveToType: K1WebTwain.Options.SaveToType.Local,
       generateDocument: () => {
         this.generateDocument(K1WebTwain.Options.SaveToType.Local);
@@ -206,6 +242,7 @@ export class ScannerInterfaceDescktopComponent implements OnInit {
     K1WebTwain.GenerateDocument({
       filetype: this.selectedFileTypeOption,
       ocrType: this.selectedOcrOption,
+      fileCompressionType: this.selectedCompressionOption,
       saveToType: saveToType,
       filename: this.outputFilename,
     })

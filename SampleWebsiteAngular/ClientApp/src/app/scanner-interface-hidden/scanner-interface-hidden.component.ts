@@ -47,6 +47,8 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
   isDisplayScanningSection: Boolean = false;
   isDisableFinalizeSection: Boolean = true;
   isDisplayOCR: Boolean = false;
+  compressionOptions: Array<any> = [];
+  selectedCompressionOption: any = "0";
 
   constructor() {}
 
@@ -54,6 +56,7 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
     K1WebTwain.Device(deviceId)
       .then((deviceInfo) => {
         let defaultSettings = getDefaultScanSettings();
+        debugger
 
         if (!isEmpty(deviceInfo)) {
           let documentSourceOptions = Object.keys(
@@ -107,7 +110,8 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
     saveDefaultScanSettings(
       defaultSettings?.ScanType ?? this.selectedFileTypeOption,
       defaultSettings?.OCRType ?? this.selectedOcrOption,
-      scannerDetails
+      scannerDetails,
+      this.selectedCompressionOption
     );
   }
 
@@ -132,14 +136,13 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
       duplexOptions = convertRawOptions(selectedDocumentSource.duplexIds);
       pageSizeOptions = convertRawOptions(selectedDocumentSource.pageSizeIds);
       pixelTypeOptions = convertRawOptions(selectedDocumentSource.pixelTypeIds);
-      resolutionOptions = convertRawOptions(
-        selectedDocumentSource.resolutionIds
-      );
+      resolutionOptions = convertRawOptions(selectedDocumentSource.resolutionIds);
     } else {
       selectedDocumentSource = null;
     }
 
     this.selectedDuplexOption = scannerDetails?.Duplex ?? defaultOptionsValue(duplexOptions);
+    console.log(this.selectedDuplexOption);
     this.selectedPageSizeOption = scannerDetails?.PageSize ?? defaultOptionsValue(pageSizeOptions);
     this.selectedPixelTypeOption = scannerDetails?.Color ?? defaultOptionsValue(pixelTypeOptions);
     this.selectedResolutionOption = scannerDetails?.Resolution ?? defaultOptionsValue(resolutionOptions);
@@ -150,6 +153,7 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
     this.resolutionOptions = renderOptions(resolutionOptions);
 
     scannerDetails.DocumentSource = documentSourceId;
+
     this.saveDefaultScannerDetails(defaultSettings, scannerDetails);
   }
 
@@ -183,6 +187,17 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
     let scannerDetails = getScannerDetails(defaultSettings);
     scannerDetails.Duplex = selectedDuplex;
     this.saveDefaultScannerDetails(defaultSettings, scannerDetails);
+  }
+
+  handleCompressionChange(compressionType: any) {
+    this.selectedCompressionOption = compressionType;
+    let defaultSettings = getDefaultScanSettings();
+    saveDefaultScanSettings(
+      defaultSettings?.ScanType ?? this.selectedFileTypeOption,
+      defaultSettings?.OCRType ?? this.selectedOcrOption,
+      null,
+      compressionType
+    );
   }
 
   handleAcquireClick() {
@@ -257,8 +272,14 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
           true
         );
 
+        let mappedCompressionOptions = convertRawOptions(
+          K1WebTwain.Options.FileCompressionType,
+          true
+        );
+
         this.ocrOptions = renderOptions(mappedOcrTypes);
         this.fileTypeOptions = renderOptions(mappedFileTypeOptions);
+        this.compressionOptions = renderOptions(mappedCompressionOptions);
         this.discoveredDevices = renderOptions(mappedDevices);
         this.outputFilename = generateScanFileName();
         this.isDisplayScanningSection = true;
@@ -271,6 +292,7 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
           this.selectedOcrOption = scanSettings.UseOCR
             ? scanSettings.OCRType
             : K1WebTwain.Options.OcrType.None;
+          this.selectedCompressionOption = scanSettings.FileCompressionType ?? (mappedCompressionOptions.length > 0 ? mappedCompressionOptions[0].value : "0");
           this.handleDeviceChange(deviceId);
         } else {
           this.handleDeviceChange(defaultOptionsValue(mappedDevices));
@@ -349,6 +371,7 @@ export class ScannerInterfaceHiddenComponent implements OnInit {
       ocrType: this.selectedOcrOption,
       saveToType: saveToType,
       filename: this.outputFilename,
+      fileCompressionType: this.selectedCompressionOption,
     })
       .then((response) => {
         let responseMessage = response.uploadResponse;
